@@ -8,14 +8,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-Dependency directories
+Dependency directories (QUAN TRỌNG NHẤT)
 
 node_modules
+.pnpm-store
+
+Build output (Kết quả build)
+
 dist
 dist-ssr
 *.local
 
-Editor directories and files
+Editor directories and files (Cấu hình riêng của trình soạn thảo)
 
 .vscode/*
 !.vscode/extensions.json
@@ -27,7 +31,7 @@ Editor directories and files
 *.sln
 *.sw?
 
-Env files
+Env files (Biến môi trường bảo mật)
 
 .env
 .env.*
