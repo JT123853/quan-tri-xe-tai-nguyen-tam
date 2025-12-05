@@ -1,0 +1,41 @@
+Logs
+
+logs
+.log
+npm-debug.log
+
+Dependency directories
+
+node_modules/
+
+Build output
+
+dist/
+release/
+
+System Files
+
+.DS_Store
+Thumbs.db
+
+
+### BƯỚC 2: XÓA `node_modules` KHỎI GITHUB (Bằng lệnh)
+
+Bạn cần chạy các lệnh này để xóa `node_modules` khỏi kho chứa trên mạng (nhưng vẫn giữ lại trên máy bạn).
+
+1.  Mở Terminal (trong VS Code hoặc CMD).
+2.  Gõ lần lượt các lệnh sau (nhấn Enter sau mỗi dòng):
+
+```bash
+git rm -r --cached node_modules
+
+
+(Lệnh này sẽ xóa node_modules khỏi bộ nhớ đệm của Git. Bạn sẽ thấy nó liệt kê rất nhiều file bị xóa - đừng lo, file trên máy bạn vẫn còn).
+
+git add .
+
+
+git commit -m "Fix: Remove node_modules from git and add gitignore"
+
+
+git push origin main

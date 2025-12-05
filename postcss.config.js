@@ -1,4 +1,4 @@
-module.exports = { // <<< ĐÃ SỬA TỪ 'export default' THÀNH 'module.exports'
+export default {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},

@@ -1,8 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Không cần base: './' nữa, để mặc định '/' cho Web server
+  // Rất quan trọng: Chỉ định thư mục public để Tailwind quét CSS
+  publicDir: 'public', 
+  
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  }
 });
