@@ -1,3 +1,5 @@
+// electron/main.js
+
 const { app, BrowserWindow, protocol } = require('electron');
 const path = require('path');
 
@@ -10,14 +12,15 @@ function createWindow() {
       nodeIntegration: true,
       webSecurity: false,
     },
-    // Icon (nếu có file icon trong public)
-    icon: path.join(__dirname, '../public/favicon.ico'), 
+    // SỬA LỖI: Dùng '__dirname' (2 dấu gạch dưới)
+    icon: path.join(__dirname, '../public/favicon.ico'),
   });
 
-  // Tải file index.html từ thư mục dist
+  // SỬA LỖI: Dùng '__dirname' (2 dấu gạch dưới)
+  // Đường dẫn chính xác bây giờ là 'dist/index.html'
   mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
-
-  // Mở DevTools để kiểm tra lỗi (Tắt đi khi release thật)
+  
+  // Mở DevTools (Tùy chọn)
   // mainWindow.webContents.openDevTools(); 
 
   mainWindow.once('ready-to-show', () => {
@@ -26,6 +29,10 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  protocol.registerFileProtocol('file', (request, callback) => {
+    const pathname = decodeURI(request.url.replace('file:///', ''));
+    callback(pathname);
+  });
   createWindow();
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -35,3 +42,5 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
 });
+
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
