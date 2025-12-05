@@ -28,7 +28,6 @@ const formatDate = (dateString) => {
 };
 
 // --- KHỞI TẠO DỮ LIỆU RỖNG (SẴN SÀNG NHẬP LIỆU) ---
-// Dữ liệu này sẽ được lưu vào localStorage để giữ lại khi refresh
 const initialData = {
   kpi: [
     { title: 'Tổng Doanh Thu Tháng', value: 0, change: '0%', icon: TrendingUp, color: 'text-emerald-500', bgColor: 'bg-emerald-50' },
@@ -47,9 +46,7 @@ const initialData = {
 };
 
 // --- API HELPERS (GIẢ LẬP BACKEND VỚI LOCALSTORAGE) ---
-// Hàm này mô phỏng gọi API nhưng thực tế là đọc/ghi vào localStorage
 const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
-  // console.log(`API Call: ${method} ${endpoint}`, { body, token });
   await new Promise(resolve => setTimeout(resolve, 300)); // Giả lập độ trễ
 
   // 1. Đăng nhập
@@ -64,7 +61,7 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
   // 2. Yêu cầu xác thực
   if (!token) throw new Error('Chưa xác thực.');
 
-  // Lấy dữ liệu từ localStorage hoặc dùng dữ liệu rỗng ban đầu
+  // Lấy dữ liệu từ localStorage
   const getDB = () => {
     const db = localStorage.getItem('appData');
     return db ? JSON.parse(db) : initialData;
@@ -80,9 +77,7 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
 
   // GET KPI
   if (endpoint.startsWith('/api/kpi')) {
-    // Tính toán lại KPI dựa trên dữ liệu thực tế
     const totalRevenue = db.sales.reduce((sum, item) => sum + item.amount, 0);
-    // Giả sử lãi gộp là 10% doanh thu cho đơn giản (hoặc tính từ giá vốn nếu có)
     const grossProfit = totalRevenue * 0.1; 
     const inventoryValue = db.inventory.reduce((sum, item) => sum + (item.cost || 0), 0);
     const inventoryCount = db.inventory.length;
@@ -96,7 +91,7 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
   }
 
   // GET/POST Khách Hàng
-  if (endpoint === '/api/khachhang/') {
+  if (endpoint.startsWith('/api/khachhang/')) {
     if (method === 'GET') return db.customers;
     if (method === 'POST') {
       const newCustomer = { id: Date.now(), ...body };
@@ -107,7 +102,7 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
   }
 
   // GET/POST Nhà Cung Cấp
-  if (endpoint === '/api/nhacungcap/') {
+  if (endpoint.startsWith('/api/nhacungcap/')) {
     if (method === 'GET') return db.suppliers;
     if (method === 'POST') {
       const newSupplier = { id: Date.now(), ...body };
@@ -118,11 +113,12 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
   }
 
   // GET/POST Nhập Kho (Xe Tải)
-  if (endpoint === '/api/xetai/') {
+  // --- SỬA LỖI Ở ĐÂY: Dùng startsWith để bắt được query params ---
+  if (endpoint.startsWith('/api/xetai/')) {
     // Lọc xe tồn kho
     if (method === 'GET') {
         if (endpoint.includes('status=AVAILABLE')) return db.inventory.filter(x => x.status === 'AVAILABLE');
-        if (endpoint.includes('status=LONG_STOCK')) return db.inventory.filter(x => x.daysInStock > 60); // Mock logic
+        if (endpoint.includes('status=LONG_STOCK')) return db.inventory.filter(x => x.daysInStock > 60);
         return db.inventory;
     }
     if (method === 'POST') {
@@ -135,8 +131,8 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
         supplier_id: body.supplier_id
       };
       db.inventory.push(newTruck);
-      db.availableTrucks.push(newTruck); // Cập nhật danh sách xe sẵn sàng bán
-
+      // db.availableTrucks không cần thiết vì chúng ta lọc từ db.inventory
+      
       // Tự động tạo bút toán
       db.journalEntries.push({
         id: `J${Date.now()}`, date: new Date().toISOString(),
@@ -167,7 +163,7 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
 
       // Cập nhật trạng thái xe
       db.inventory[truckIndex].status = 'SOLD';
-      db.availableTrucks = db.availableTrucks.filter(t => t.id !== body.car_vin);
+      // Không cần cập nhật db.availableTrucks riêng
 
       const customer = db.customers.find(c => c.id == body.customer_id);
       const salePrice = parseFloat(body.sale_price);
@@ -210,7 +206,7 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
   }
 
   // GET/POST Bút toán
-  if (endpoint === '/api/buttoan/') {
+  if (endpoint.startsWith('/api/buttoan/')) {
     if (method === 'GET') return db.journalEntries;
     if (method === 'POST') {
       const newEntry = {
@@ -227,7 +223,6 @@ const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {
     }
   }
 
-  // Các API khác (Mua hàng, Dịch vụ) - chỉ lưu log, không xử lý sâu logic phức tạp
   if (method === 'POST') return { success: true };
 
   return [];
@@ -393,7 +388,7 @@ const DashboardPage = ({ token }) => {
         setLoading(true);
         const kpi = await apiCall('/api/kpi', 'GET', null, token);
         const sales = await apiCall('/api/donhangban/?limit=5', 'GET', null, token);
-        const inventory = await apiCall('/api/xetai/?status=LONG_STOCK', 'GET', null, token); // Sẽ trả về [] nếu chưa có
+        const inventory = await apiCall('/api/xetai/?status=LONG_STOCK', 'GET', null, token);
         
         setKpiData(kpi);
         setSalesData(sales);
@@ -534,7 +529,7 @@ const SalesForm = ({ token, onDataSubmit }) => {
       await apiCall('/api/donhangban/', 'POST', formData, token);
       setMessage({ type: 'success', text: 'Bán hàng thành công!' });
       setFormData({ customer_id: '', car_vin: '', sale_price: '' });
-      loadData(); // Reload xe
+      loadData();
       onDataSubmit();
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
@@ -631,7 +626,6 @@ const App = () => {
   const [authToken, setAuthToken] = useState(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
   
-  // Tải lại state từ localStorage khi F5 để không bị logout
   useEffect(() => {
     const savedToken = localStorage.getItem('authToken');
     if (savedToken) setAuthToken(savedToken);
@@ -648,7 +642,6 @@ const App = () => {
     setCurrentPage('dashboard');
   };
 
-  // Callback giả để trigger reload data (trong thực tế dùng Context/Redux)
   const [refreshKey, setRefreshKey] = useState(0);
   const triggerRefresh = () => setRefreshKey(k => k + 1);
 

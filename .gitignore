@@ -3,35 +3,11 @@ Logs
 logs
 .log
 npm-debug.log
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-Dependency directories (QUAN TRỌNG NHẤT)
+Dependency directories
 
-node_modules
-.pnpm-store
+node_modules/
 
-Build output (Kết quả build)
+Build output
 
-dist
-dist-ssr
-*.local
-
-Editor directories and files (Cấu hình riêng của trình soạn thảo)
-
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-.ntvs
-*.njsproj
-*.sln
-*.sw?
-
-Env files (Biến môi trường bảo mật)
-
-.env
-.env.*
+dist/
